@@ -122,8 +122,9 @@ def create_observation(session: Session, payload: dict[str, str]) -> Observation
     observation = Observation(
         house_number=clean["house_number"],
         owner_name=clean["owner_name"],
-        owner_email=clean["owner_email"],
-        article_or_page=clean["article_or_page"],
+        owner_document=str(clean["owner_document"]),
+        page_number=int(clean["page_number"]),
+        article=str(clean["article"]),
         body=clean["body"],
         status=ObservationStatus.nueva.value,
         created_at=now,
@@ -146,8 +147,9 @@ class ObservationRecord:
     id: int
     house_number: str
     owner_name: str
-    owner_email: str
-    article_or_page: str
+    owner_document: str
+    page_number: int
+    article: str
     body: str
     status: str
     created_at: datetime
@@ -162,8 +164,9 @@ def snapshot_observation(row: Observation) -> ObservationRecord:
         id=row.id,
         house_number=row.house_number,
         owner_name=row.owner_name,
-        owner_email=row.owner_email,
-        article_or_page=row.article_or_page,
+        owner_document=row.owner_document,
+        page_number=row.page_number,
+        article=row.article,
         body=row.body,
         status=row.status,
         created_at=row.created_at,

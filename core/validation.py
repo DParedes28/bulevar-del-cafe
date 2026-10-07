@@ -4,7 +4,7 @@ from pathlib import Path
 from core.errors import ValidationError
 from core.models import MAX_PDF_BYTES
 
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+DOCUMENT_RE = re.compile(r"^[0-9]{5,12}$")
 PDF_MAGIC = b"%PDF"
 FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 
@@ -16,25 +16,29 @@ def _clean(value: str) -> str:
 def validate_observation_fields(
     house_number: str,
     owner_name: str,
-    owner_email: str,
-    article_or_page: str,
+    owner_document: str,
+    page_number: str,
+    article: str,
     body: str,
-) -> dict[str, str]:
+) -> dict[str, str | int]:
     house = _clean(house_number)
     name = _clean(owner_name)
-    email = _clean(owner_email).lower()
-    article = _clean(article_or_page)
+    document = re.sub(r"[\s.\-]", "", _clean(owner_document))
+    article_label = _clean(article)
     observation = _clean(body)
     errors: list[str] = []
+    parsed_page = int(page_number) if str(page_number).isdigit() else 0
 
     if not 1 <= len(house) <= 20:
         errors.append("El número de casa debe tener entre 1 y 20 caracteres.")
     if not 2 <= len(name) <= 120:
         errors.append("El nombre debe tener entre 2 y 120 caracteres.")
-    if len(email) > 254 or EMAIL_RE.fullmatch(email) is None:
-        errors.append("Escribe un correo electrónico válido.")
-    if not 1 <= len(article) <= 120:
-        errors.append("El artículo o la página debe tener entre 1 y 120 caracteres.")
+    if DOCUMENT_RE.fullmatch(document) is None:
+        errors.append("Escribe la cédula solo con números, entre 5 y 12 dígitos.")
+    if not 1 <= parsed_page <= 9999:
+        errors.append("Elige la página del manual.")
+    if len(article_label) > 80:
+        errors.append("El artículo debe tener como máximo 80 caracteres.")
     if not 10 <= len(observation) <= 4000:
         errors.append("La observación debe tener entre 10 y 4000 caracteres.")
 
@@ -44,8 +48,9 @@ def validate_observation_fields(
     return {
         "house_number": house,
         "owner_name": name,
-        "owner_email": email,
-        "article_or_page": article,
+        "owner_document": document,
+        "page_number": parsed_page,
+        "article": article_label,
         "body": observation,
     }
 

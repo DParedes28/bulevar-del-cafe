@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 
+from sqlalchemy import text
 from sqlmodel import Session, SQLModel, create_engine
 
 from core.config import get_settings
@@ -37,7 +38,69 @@ def get_engine():
 def init_db() -> None:
     import core.models  # noqa: F401
 
-    SQLModel.metadata.create_all(get_engine())
+    engine = get_engine()
+    SQLModel.metadata.create_all(engine)
+    _migrate_observations(engine)
+
+
+def _migrate_observations(engine) -> None:
+    if engine.dialect.name != "postgresql":
+        return
+    with engine.begin() as connection:
+        connection.execute(text("LOCK TABLE observations IN ACCESS EXCLUSIVE MODE"))
+        columns = {
+            row[0]
+            for row in connection.execute(
+                text(
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_schema = 'public' AND table_name = 'observations'"
+                )
+            )
+        }
+        if "owner_document" in columns or "owner_email" not in columns:
+            return
+        connection.execute(text("ALTER TABLE observations ADD COLUMN owner_document VARCHAR(20)"))
+        connection.execute(text("ALTER TABLE observations ADD COLUMN page_number INTEGER"))
+        connection.execute(text("ALTER TABLE observations ADD COLUMN article VARCHAR(80) NOT NULL DEFAULT ''"))
+        connection.execute(
+            text(
+                """
+                UPDATE observations
+                SET owner_document = LEFT(btrim(owner_email), 20),
+                    page_number = COALESCE(
+                        NULLIF(substring(article_or_page FROM '([0-9]+)'), '')::integer,
+                        1
+                    ),
+                    article = LEFT(
+                        btrim(COALESCE(substring(article_or_page FROM '·[[:space:]]*(.*)$'), '')),
+                        80
+                    )
+                """
+            )
+        )
+        connection.execute(text("ALTER TABLE observations DROP CONSTRAINT IF EXISTS observations_article_chk"))
+        connection.execute(text("ALTER TABLE observations DROP COLUMN owner_email"))
+        connection.execute(text("ALTER TABLE observations DROP COLUMN article_or_page"))
+        connection.execute(text("ALTER TABLE observations ALTER COLUMN owner_document SET NOT NULL"))
+        connection.execute(text("ALTER TABLE observations ALTER COLUMN page_number SET NOT NULL"))
+        connection.execute(
+            text(
+                "ALTER TABLE observations ADD CONSTRAINT observations_document_chk "
+                "CHECK (char_length(btrim(owner_document)) BETWEEN 1 AND 20)"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE observations ADD CONSTRAINT observations_page_chk "
+                "CHECK (page_number BETWEEN 1 AND 9999)"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE observations ADD CONSTRAINT observations_article_chk "
+                "CHECK (char_length(article) <= 80)"
+            )
+        )
 
 
 @contextmanager

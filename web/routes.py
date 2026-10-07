@@ -26,8 +26,9 @@ router = APIRouter()
 EMPTY_FORM = {
     "house_number": "",
     "owner_name": "",
-    "owner_email": "",
-    "article_or_page": "",
+    "owner_document": "",
+    "page_number": "",
+    "article": "",
     "body": "",
 }
 
@@ -134,25 +135,26 @@ def submit_observation(
     request: Request,
     house_number: str = Form(""),
     owner_name: str = Form(""),
-    owner_email: str = Form(""),
-    article_or_page: str = Form(""),
+    owner_document: str = Form(""),
+    page_number: str = Form("1"),
+    article: str = Form(""),
     body: str = Form(""),
     company_website: str = Form(""),
     return_to: str = Form("/"),
-    page: str = Form("1"),
     session: Session = Depends(get_session),
 ):
     form = {
         "house_number": house_number,
         "owner_name": owner_name,
-        "owner_email": owner_email,
-        "article_or_page": article_or_page,
+        "owner_document": owner_document,
+        "page_number": page_number,
+        "article": article,
         "body": body,
     }
     reader = reader_requested(return_to)
-    start_page = int(page) if page.isdigit() and int(page) > 0 else 1
+    start_page = int(page_number) if page_number.isdigit() and int(page_number) > 0 else 1
     if company_website.strip():
-        return RedirectResponse(after_send(return_to, page), status_code=303)
+        return RedirectResponse(after_send(return_to, page_number), status_code=303)
     try:
         create_observation(session, form)
     except FormClosedError as exc:
@@ -183,7 +185,7 @@ def submit_observation(
             status_code=503,
             reader=reader,
         )
-    return RedirectResponse(after_send(return_to, page), status_code=303)
+    return RedirectResponse(after_send(return_to, page_number), status_code=303)
 
 
 @router.get("/manual")

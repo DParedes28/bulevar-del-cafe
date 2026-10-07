@@ -56,7 +56,15 @@ class Observation(SQLModel, table=True):
             name="observations_name_chk",
         ),
         CheckConstraint(
-            "char_length(btrim(article_or_page)) BETWEEN 1 AND 120",
+            "char_length(btrim(owner_document)) BETWEEN 1 AND 20",
+            name="observations_document_chk",
+        ),
+        CheckConstraint(
+            "page_number BETWEEN 1 AND 9999",
+            name="observations_page_chk",
+        ),
+        CheckConstraint(
+            "char_length(article) <= 80",
             name="observations_article_chk",
         ),
         CheckConstraint(
@@ -78,8 +86,9 @@ class Observation(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     house_number: str = Field(sa_column=Column(String(20), nullable=False))
     owner_name: str = Field(sa_column=Column(String(120), nullable=False))
-    owner_email: str = Field(sa_column=Column(String(254), nullable=False))
-    article_or_page: str = Field(sa_column=Column(String(120), nullable=False))
+    owner_document: str = Field(sa_column=Column(String(20), nullable=False))
+    page_number: int = Field(sa_column=Column(Integer, nullable=False))
+    article: str = Field(default="", sa_column=Column(String(80), nullable=False, server_default=""))
     body: str = Field(sa_column=Column(Text, nullable=False))
     status: str = Field(
         default=ObservationStatus.nueva.value,

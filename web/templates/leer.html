@@ -101,7 +101,7 @@
         </div>
         {% endif %}
         {% if form_open and manual_available %}
-        <p id="page-help">Escribe sobre la página que estás viendo. El número viaja con el comentario.</p>
+        <p id="page-help">La página y el artículo se envían por separado. Elige la página que estás viendo.</p>
         {% if deadline_label %}<p>El periodo sigue abierto hasta el <strong>{{ deadline_label }}</strong>.</p>{% endif %}
         <form method="post" action="/observaciones" id="comment-form" accept-charset="utf-8">
           <div style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
@@ -109,18 +109,17 @@
             <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off" />
           </div>
           <input type="hidden" name="return_to" value="/leer" />
-          <input type="hidden" name="page" id="page-field" value="{{ start_page }}" />
-          <input type="hidden" name="article_or_page" id="article-field" value="Página {{ start_page }}" />
+          <input type="hidden" name="page_number" id="page-field" value="{{ start_page }}" />
           <label for="comment-page">Página</label>
           <select id="comment-page"></select>
-          <label for="article-note">Artículo, si aplica</label>
-          <input id="article-note" type="text" maxlength="80" placeholder="Opcional" />
+          <label for="article">Artículo, si aplica</label>
+          <input id="article" name="article" type="text" maxlength="80" placeholder="Opcional" value="{{ form.article }}" />
           <label for="house_number">Número de casa</label>
           <input id="house_number" name="house_number" required maxlength="20" value="{{ form.house_number }}" />
           <label for="owner_name">Nombre</label>
           <input id="owner_name" name="owner_name" required minlength="2" maxlength="120" value="{{ form.owner_name }}" />
-          <label for="owner_email">Correo electrónico</label>
-          <input id="owner_email" name="owner_email" type="email" required maxlength="254" value="{{ form.owner_email }}" />
+          <label for="owner_document">Cédula</label>
+          <input id="owner_document" name="owner_document" inputmode="numeric" required maxlength="20" placeholder="Solo números" value="{{ form.owner_document }}" />
           <label for="body">Observación</label>
           <textarea id="body" name="body" required minlength="10" maxlength="4000">{{ form.body }}</textarea>
           <button type="submit">Enviar comentario</button>
@@ -143,10 +142,7 @@
       const prev = document.getElementById("prev");
       const next = document.getElementById("next");
       const pageField = document.getElementById("page-field");
-      const articleField = document.getElementById("article-field");
       const commentPage = document.getElementById("comment-page");
-      const articleNote = document.getElementById("article-note");
-      const form = document.getElementById("comment-form");
       const lensToggle = document.getElementById("lens-toggle");
       const lens = document.getElementById("lens");
       const lensCanvas = document.getElementById("lens-canvas");
@@ -196,21 +192,12 @@
         }
         const chosen = commentPage ? Number(commentPage.value) : pages[0];
         if (pageField) pageField.value = String(chosen);
-        updateArticle();
         const last = pdfDoc.numPages;
         counter.textContent = isWide() && pages.length === 2
           ? "Páginas " + pages[0] + "–" + pages[1] + " de " + last
           : "Página " + pages[0] + " de " + last;
         prev.disabled = current <= 1;
         next.disabled = Math.max(...pages) >= last;
-      }
-
-      function updateArticle() {
-        if (!articleField) return;
-        const pageNumber = commentPage ? commentPage.value : String(current);
-        const note = articleNote ? articleNote.value.trim() : "";
-        const label = "Página " + pageNumber;
-        articleField.value = note ? (label + " · " + note).slice(0, 120) : label;
       }
 
       async function draw() {
@@ -285,8 +272,6 @@
         canvas.addEventListener("pointerleave", hideLens);
       });
       if (commentPage) commentPage.addEventListener("change", syncComment);
-      if (articleNote) articleNote.addEventListener("input", updateArticle);
-      if (form) form.addEventListener("submit", updateArticle);
       wideQuery.addEventListener("change", draw);
 
       pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";

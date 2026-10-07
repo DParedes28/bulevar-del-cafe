@@ -6,7 +6,7 @@ Sitio público para consultar el borrador del Manual de Convivencia y enviar obs
 
 - La página pública muestra el PDF cuando hay uno publicado y el formulario solo si existe una fecha límite que todavía no se cumple. La hora de referencia es `America/Bogota`.
 - Sin fecha configurada, el formulario permanece abierto. Al guardar una fecha de cierre, se oculta cuando esa fecha se cumple.
-- Cada observación guarda número de casa, nombre, correo, artículo o página y el texto. El estado inicial es `nueva`.
+- Cada observación guarda número de casa, nombre, cédula, página, artículo y el texto. El estado inicial es `nueva`.
 - Eliminar una observación marca `deleted_at`. El listado y la exportación las ocultan, y el panel puede mostrarlas para restaurarlas.
 - El PDF vive en Neon, así que el sitio y el panel leen el mismo archivo aunque sean dos servicios distintos.
 
