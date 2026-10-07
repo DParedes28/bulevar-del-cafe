@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#1c1917" />
+    <title>Leer el manual · Bulevar del Café</title>
+    <link rel="icon" href="/static/mark.svg" type="image/svg+xml" />
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #ece7e1; color: #1c1917; font-family: "Segoe UI", sans-serif; }
+      a { color: inherit; }
+      header { background: #1c1917; color: #fafaf9; }
+      .bar { max-width: 1180px; margin: 0 auto; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+      .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+      .brand small { display: block; letter-spacing: 0.16em; text-transform: uppercase; color: #a8a29e; font-size: 11px; }
+      .brand strong { font-family: Georgia, serif; font-weight: 560; }
+      .back { color: #fafaf9; text-decoration: none; font-size: 14px; }
+      .layout { max-width: 1180px; margin: 0 auto; padding: 24px 20px 40px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+      .stage { background: #2c2622; border-radius: 16px; padding: 20px 16px 16px; min-height: 70vh; }
+      .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #fafaf9; margin-bottom: 16px; }
+      .toolbar button, .note button, .back-btn { border: 0; border-radius: 8px; padding: 10px 14px; font: inherit; cursor: pointer; }
+      .toolbar button { background: #fafaf9; color: #1c1917; }
+      .toolbar button:disabled { opacity: 0.45; cursor: default; }
+      .spread { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+      .sheet { background: #fff; min-height: 240px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28); overflow: hidden; }
+      .sheet canvas { display: block; width: 100%; height: auto; }
+      .note { background: #fff; border: 1px solid #e7e5e4; border-radius: 16px; padding: 20px; position: sticky; top: 16px; }
+      .note h1 { font-family: Georgia, serif; font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+      .note p, .status { color: #44403c; line-height: 1.5; }
+      label { display: block; font-size: 14px; font-weight: 560; margin: 14px 0 6px; }
+      input, textarea, select { width: 100%; border: 1px solid #d6d3d1; border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 16px; }
+      textarea { min-height: 140px; resize: vertical; }
+      .note button, .back-btn { background: #1c1917; color: #fff; margin-top: 16px; }
+      .alert { border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+      .ok { background: #ecfdf5; border: 1px solid #a7f3d0; }
+      .bad { background: #fef2f2; border: 1px solid #fecaca; }
+      .bad ul { margin: 0; padding-left: 18px; }
+      .missing { background: #fff; border-radius: 16px; padding: 24px; }
+      @media (max-width: 900px) {
+        .layout { grid-template-columns: 1fr; }
+        .spread { grid-template-columns: 1fr; }
+        .sheet.right { display: none; }
+        .note { position: static; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <a class="brand" href="/">
+          <img src="/static/mark.svg" alt="" width="36" height="36" />
+          <span><small>Propiedad horizontal</small><strong>Bulevar del Café</strong></span>
+        </a>
+        <a class="back" href="/">Volver</a>
+      </div>
+    </header>
+    <main class="layout">
+      <section>
+        {% if not manual_available %}
+        <div class="missing">
+          <h1>El manual todavía no se ha publicado.</h1>
+          <p>Cuando la administración cargue el PDF, podrás leerlo aquí y comentar cada página.</p>
+          <a class="back-btn" href="/" style="display:inline-block;text-decoration:none;">Volver al inicio</a>
+        </div>
+        {% else %}
+        <div class="stage">
+          <div class="toolbar">
+            <button type="button" id="prev">Anterior</button>
+            <span id="counter">Cargando páginas…</span>
+            <button type="button" id="next">Siguiente</button>
+          </div>
+          <div class="spread">
+            <div class="sheet"><canvas id="left-page"></canvas></div>
+            <div class="sheet right"><canvas id="right-page"></canvas></div>
+          </div>
+        </div>
+        {% endif %}
+      </section>
+      <aside class="note">
+        <h1>Comentario</h1>
+        {% if sent %}
+        <div class="alert ok" role="status">Recibimos tu observación. Puedes seguir leyendo y enviar otra.</div>
+        {% endif %}
+        {% if errors %}
+        <div class="alert bad" role="alert">
+          <ul>
+            {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+        {% if form_open and manual_available %}
+        <p id="page-help">Escribe sobre la página que estás viendo. El número viaja con el comentario.</p>
+        {% if deadline_label %}<p>El periodo sigue abierto hasta el <strong>{{ deadline_label }}</strong>.</p>{% endif %}
+        <form method="post" action="/observaciones" id="comment-form" accept-charset="utf-8">
+          <div style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+            <label for="company_website">Sitio web</label>
+            <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+          <input type="hidden" name="return_to" value="/leer" />
+          <input type="hidden" name="page" id="page-field" value="{{ start_page }}" />
+          <input type="hidden" name="article_or_page" id="article-field" value="Página {{ start_page }}" />
+          <label for="comment-page">Página</label>
+          <select id="comment-page"></select>
+          <label for="article-note">Artículo, si aplica</label>
+          <input id="article-note" type="text" maxlength="80" placeholder="Opcional" />
+          <label for="house_number">Número de casa</label>
+          <input id="house_number" name="house_number" required maxlength="20" value="{{ form.house_number }}" />
+          <label for="owner_name">Nombre</label>
+          <input id="owner_name" name="owner_name" required minlength="2" maxlength="120" value="{{ form.owner_name }}" />
+          <label for="owner_email">Correo electrónico</label>
+          <input id="owner_email" name="owner_email" type="email" required maxlength="254" value="{{ form.owner_email }}" />
+          <label for="body">Observación</label>
+          <textarea id="body" name="body" required minlength="10" maxlength="4000">{{ form.body }}</textarea>
+          <button type="submit">Enviar comentario</button>
+        </form>
+        {% elif not form_open %}
+        <p>El periodo de observaciones ya cerró{% if deadline_label %} el <strong>{{ deadline_label }}</strong>{% endif %}. Puedes seguir leyendo el manual.</p>
+        {% else %}
+        <p>El formulario aparece aquí cuando el manual esté publicado.</p>
+        {% endif %}
+      </aside>
+    </main>
+    {% if manual_available %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      const startPage = {{ start_page }};
+      const leftCanvas = document.getElementById("left-page");
+      const rightCanvas = document.getElementById("right-page");
+      const counter = document.getElementById("counter");
+      const prev = document.getElementById("prev");
+      const next = document.getElementById("next");
+      const pageField = document.getElementById("page-field");
+      const articleField = document.getElementById("article-field");
+      const commentPage = document.getElementById("comment-page");
+      const articleNote = document.getElementById("article-note");
+      const form = document.getElementById("comment-form");
+      const wideQuery = window.matchMedia("(min-width: 901px)");
+      let pdfDoc = null;
+      let current = startPage;
+
+      function isWide() { return wideQuery.matches; }
+
+      function visiblePages() {
+        if (!pdfDoc) return [1];
+        const pages = [Math.min(current, pdfDoc.numPages)];
+        if (isWide() && pages[0] < pdfDoc.numPages) pages.push(pages[0] + 1);
+        return pages;
+      }
+
+      async function paint(canvas, pageNumber) {
+        const page = await pdfDoc.getPage(pageNumber);
+        const base = page.getViewport({ scale: 1 });
+        const width = canvas.parentElement.clientWidth || 480;
+        const viewport = page.getViewport({ scale: width / base.width });
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(viewport.width * ratio);
+        canvas.height = Math.floor(viewport.height * ratio);
+        canvas.style.width = viewport.width + "px";
+        canvas.style.height = viewport.height + "px";
+        const context = canvas.getContext("2d");
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        await page.render({ canvasContext: context, viewport }).promise;
+      }
+
+      function syncComment() {
+        const pages = visiblePages();
+        if (commentPage) {
+          const selected = Number(commentPage.value) || pages[0];
+          commentPage.innerHTML = "";
+          pages.forEach((number) => {
+            const option = document.createElement("option");
+            option.value = String(number);
+            option.textContent = "Página " + number;
+            commentPage.appendChild(option);
+          });
+          commentPage.value = pages.includes(selected) ? String(selected) : String(pages[0]);
+        }
+        const chosen = commentPage ? Number(commentPage.value) : pages[0];
+        if (pageField) pageField.value = String(chosen);
+        updateArticle();
+        const last = pdfDoc.numPages;
+        counter.textContent = isWide() && pages.length === 2
+          ? "Páginas " + pages[0] + "–" + pages[1] + " de " + last
+          : "Página " + pages[0] + " de " + last;
+        prev.disabled = current <= 1;
+        next.disabled = Math.max(...pages) >= last;
+      }
+
+      function updateArticle() {
+        if (!articleField) return;
+        const pageNumber = commentPage ? commentPage.value : String(current);
+        const note = articleNote ? articleNote.value.trim() : "";
+        const label = "Página " + pageNumber;
+        articleField.value = note ? (label + " · " + note).slice(0, 120) : label;
+      }
+
+      async function draw() {
+        const pages = visiblePages();
+        await paint(leftCanvas, pages[0]);
+        if (pages[1]) {
+          rightCanvas.parentElement.hidden = false;
+          await paint(rightCanvas, pages[1]);
+        } else if (rightCanvas) {
+          rightCanvas.parentElement.hidden = !isWide();
+          const context = rightCanvas.getContext("2d");
+          context.clearRect(0, 0, rightCanvas.width, rightCanvas.height);
+        }
+        syncComment();
+      }
+
+      prev.addEventListener("click", () => {
+        current = Math.max(1, current - (isWide() ? 2 : 1));
+        draw();
+      });
+      next.addEventListener("click", () => {
+        const step = isWide() ? 2 : 1;
+        current = Math.min(pdfDoc.numPages, current + step);
+        draw();
+      });
+      if (commentPage) commentPage.addEventListener("change", syncComment);
+      if (articleNote) articleNote.addEventListener("input", updateArticle);
+      if (form) form.addEventListener("submit", updateArticle);
+      wideQuery.addEventListener("change", draw);
+
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      pdfjsLib.getDocument("/manual").promise.then((doc) => {
+        pdfDoc = doc;
+        current = Math.min(Math.max(startPage, 1), doc.numPages);
+        return draw();
+      }).catch(() => {
+        counter.textContent = "No se pudo abrir el PDF en el libro.";
+      });
+    </script>
+    {% endif %}
+  </body>
+</html>

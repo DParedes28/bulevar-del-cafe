@@ -143,7 +143,7 @@ period_tab, manual_tab, observations_tab = st.tabs(["Periodo", "Manual", "Observ
 with period_tab:
     if deadline_at is None:
         initial = datetime.now(BOGOTA) + timedelta(days=15)
-        st.info("Todavía no hay una fecha límite. El formulario público permanece cerrado hasta que guardes una.")
+        st.info("Todavía no hay una fecha límite. Los copropietarios pueden comentar hasta que guardes una fecha de cierre.")
     else:
         initial = to_bogota(deadline_at)
         st.write(f"Cierre actual: **{format_bogota(deadline_at)}**")

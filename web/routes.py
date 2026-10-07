@@ -60,13 +60,24 @@ def page_context(session: Session, **extra: object) -> dict[str, object]:
     return context
 
 
-def render(request: Request, context: dict[str, object], status_code: int = 200):
+def render(request: Request, context: dict[str, object], status_code: int = 200, reader: bool = False):
     return templates.TemplateResponse(
         request=request,
-        name="index.html",
+        name="leer.html" if reader else "index.html",
         context=context,
         status_code=status_code,
     )
+
+
+def reader_requested(return_to: str) -> bool:
+    return return_to.strip() == "/leer"
+
+
+def after_send(return_to: str, page: str) -> str:
+    if not reader_requested(return_to):
+        return "/?enviada=1"
+    page_number = int(page) if page.isdigit() and int(page) > 0 else 1
+    return f"/leer?enviada=1&pagina={page_number}"
 
 
 def pdf_response(session: Session, disposition: str) -> Response:
@@ -107,6 +118,17 @@ def home(
     return render(request, page_context(session, sent=enviada == 1))
 
 
+@router.get("/leer")
+def read_manual(
+    request: Request,
+    enviada: int = Query(default=0),
+    pagina: int = Query(default=1),
+    session: Session = Depends(get_session),
+):
+    context = page_context(session, sent=enviada == 1, start_page=max(pagina, 1))
+    return render(request, context, reader=True)
+
+
 @router.post("/observaciones")
 def submit_observation(
     request: Request,
@@ -116,6 +138,8 @@ def submit_observation(
     article_or_page: str = Form(""),
     body: str = Form(""),
     company_website: str = Form(""),
+    return_to: str = Form("/"),
+    page: str = Form("1"),
     session: Session = Depends(get_session),
 ):
     form = {
@@ -125,21 +149,25 @@ def submit_observation(
         "article_or_page": article_or_page,
         "body": body,
     }
+    reader = reader_requested(return_to)
+    start_page = int(page) if page.isdigit() and int(page) > 0 else 1
     if company_website.strip():
-        return RedirectResponse("/?enviada=1", status_code=303)
+        return RedirectResponse(after_send(return_to, page), status_code=303)
     try:
         create_observation(session, form)
     except FormClosedError as exc:
         return render(
             request,
-            page_context(session, errors=[exc.message], form=form),
+            page_context(session, errors=[exc.message], form=form, start_page=start_page),
             status_code=403,
+            reader=reader,
         )
     except ValidationError as exc:
         return render(
             request,
-            page_context(session, errors=exc.errors, form=form),
+            page_context(session, errors=exc.errors, form=form, start_page=start_page),
             status_code=400,
+            reader=reader,
         )
     except SQLAlchemyError:
         logger.exception("No se pudo guardar la observación")
@@ -150,10 +178,12 @@ def submit_observation(
                 session,
                 errors=["No pudimos guardar la observación. Inténtalo de nuevo en unos minutos."],
                 form=form,
+                start_page=start_page,
             ),
             status_code=503,
+            reader=reader,
         )
-    return RedirectResponse("/?enviada=1", status_code=303)
+    return RedirectResponse(after_send(return_to, page), status_code=303)
 
 
 @router.get("/manual")

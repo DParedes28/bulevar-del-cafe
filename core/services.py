@@ -23,7 +23,7 @@ def get_settings_row(session: Session) -> AppSettings | None:
 
 def is_form_open(row: object | None, moment: datetime | None = None) -> bool:
     if row is None:
-        return False
+        return True
     deadline = row.deadline_at
     if deadline.tzinfo is None:
         deadline = deadline.replace(tzinfo=timezone.utc)
