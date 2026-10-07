@@ -13,19 +13,25 @@
       body { margin: 0; background: #ece7e1; color: #1c1917; font-family: "Segoe UI", sans-serif; }
       a { color: inherit; }
       header { background: #1c1917; color: #fafaf9; }
-      .bar { max-width: 1180px; margin: 0 auto; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+      .bar { max-width: 1500px; margin: 0 auto; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
       .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
       .brand small { display: block; letter-spacing: 0.16em; text-transform: uppercase; color: #a8a29e; font-size: 11px; }
       .brand strong { font-family: Georgia, serif; font-weight: 560; }
       .back { color: #fafaf9; text-decoration: none; font-size: 14px; }
-      .layout { max-width: 1180px; margin: 0 auto; padding: 24px 20px 40px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
-      .stage { background: #2c2622; border-radius: 16px; padding: 20px 16px 16px; min-height: 70vh; }
-      .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #fafaf9; margin-bottom: 16px; }
+      .layout { max-width: 1500px; margin: 0 auto; padding: 16px 16px 28px; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; align-items: start; }
+      .stage { background: #2c2622; border-radius: 16px; padding: 16px; min-height: calc(100vh - 108px); }
+      .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #fafaf9; margin-bottom: 14px; }
+      .tools { display: flex; align-items: center; gap: 12px; }
       .toolbar button, .note button, .back-btn { border: 0; border-radius: 8px; padding: 10px 14px; font: inherit; cursor: pointer; }
       .toolbar button { background: #fafaf9; color: #1c1917; }
       .toolbar button:disabled { opacity: 0.45; cursor: default; }
-      .spread { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
-      .sheet { background: #fff; min-height: 240px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28); overflow: hidden; }
+      #lens-toggle[aria-pressed="true"] { background: #f3d48a; }
+      .stage.lens-on .sheet { cursor: zoom-in; }
+      .spread { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+      .sheet { background: #fff; min-height: calc(100vh - 190px); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28); overflow: hidden; }
+      .lens { position: fixed; width: 380px; height: 210px; border: 3px solid #1c1917; border-radius: 10px; background: #fff; box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4); pointer-events: none; z-index: 30; display: none; overflow: hidden; }
+      .lens.show { display: block; }
+      .lens canvas { display: block; width: 100%; height: 100%; }
       .sheet canvas { display: block; width: 100%; height: auto; }
       .note { background: #fff; border: 1px solid #e7e5e4; border-radius: 16px; padding: 20px; position: sticky; top: 16px; }
       .note h1 { font-family: Georgia, serif; font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
@@ -69,7 +75,10 @@
         <div class="stage">
           <div class="toolbar">
             <button type="button" id="prev">Anterior</button>
-            <span id="counter">Cargando páginas…</span>
+            <div class="tools">
+              <span id="counter">Cargando páginas…</span>
+              <button type="button" id="lens-toggle" aria-pressed="false">Activar lupa</button>
+            </div>
             <button type="button" id="next">Siguiente</button>
           </div>
           <div class="spread">
@@ -123,6 +132,7 @@
         {% endif %}
       </aside>
     </main>
+    <div id="lens" class="lens"><canvas id="lens-canvas" width="760" height="420"></canvas></div>
     {% if manual_available %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
@@ -137,9 +147,15 @@
       const commentPage = document.getElementById("comment-page");
       const articleNote = document.getElementById("article-note");
       const form = document.getElementById("comment-form");
+      const lensToggle = document.getElementById("lens-toggle");
+      const lens = document.getElementById("lens");
+      const lensCanvas = document.getElementById("lens-canvas");
+      const stage = document.querySelector(".stage");
       const wideQuery = window.matchMedia("(min-width: 901px)");
+      const zoom = 2.8;
       let pdfDoc = null;
       let current = startPage;
+      let lensOn = false;
 
       function isWide() { return wideQuery.matches; }
 
@@ -155,7 +171,7 @@
         const base = page.getViewport({ scale: 1 });
         const width = canvas.parentElement.clientWidth || 480;
         const viewport = page.getViewport({ scale: width / base.width });
-        const ratio = window.devicePixelRatio || 1;
+        const ratio = Math.max(window.devicePixelRatio || 1, 2);
         canvas.width = Math.floor(viewport.width * ratio);
         canvas.height = Math.floor(viewport.height * ratio);
         canvas.style.width = viewport.width + "px";
@@ -219,6 +235,54 @@
         const step = isWide() ? 2 : 1;
         current = Math.min(pdfDoc.numPages, current + step);
         draw();
+      });
+      function hideLens() {
+        lens.classList.remove("show");
+      }
+
+      function moveLens(event) {
+        if (!lensOn) return;
+        const canvas = event.currentTarget;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+          hideLens();
+          return;
+        }
+        const lensWidth = 380;
+        const lensHeight = 210;
+        let left = event.clientX + 24;
+        let top = event.clientY + 24;
+        if (left + lensWidth > window.innerWidth - 12) left = event.clientX - lensWidth - 24;
+        if (top + lensHeight > window.innerHeight - 12) top = event.clientY - lensHeight - 24;
+        lens.style.left = Math.max(8, left) + "px";
+        lens.style.top = Math.max(8, top) + "px";
+        lens.classList.add("show");
+        const context = lensCanvas.getContext("2d");
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const sourceWidth = lensCanvas.width / zoom;
+        const sourceHeight = lensCanvas.height / zoom;
+        const sourceX = Math.max(0, Math.min(canvas.width - sourceWidth, x * scaleX - sourceWidth / 2));
+        const sourceY = Math.max(0, Math.min(canvas.height - sourceHeight, y * scaleY - sourceHeight / 2));
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = "high";
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, lensCanvas.width, lensCanvas.height);
+        context.drawImage(canvas, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, lensCanvas.width, lensCanvas.height);
+      }
+
+      lensToggle.addEventListener("click", () => {
+        lensOn = !lensOn;
+        lensToggle.setAttribute("aria-pressed", lensOn ? "true" : "false");
+        lensToggle.textContent = lensOn ? "Desactivar lupa" : "Activar lupa";
+        stage.classList.toggle("lens-on", lensOn);
+        if (!lensOn) hideLens();
+      });
+      [leftCanvas, rightCanvas].forEach((canvas) => {
+        canvas.addEventListener("pointermove", moveLens);
+        canvas.addEventListener("pointerleave", hideLens);
       });
       if (commentPage) commentPage.addEventListener("change", syncComment);
       if (articleNote) articleNote.addEventListener("input", updateArticle);
