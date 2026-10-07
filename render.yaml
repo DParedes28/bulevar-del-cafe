@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: bulevar-del-cafe
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn web.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+
+  - type: web
+    name: bulevar-del-cafe-admin
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run admin/streamlit_app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true --browser.gatherUsageStats false
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12.7"

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#1c1917" />
+    <title>Bulevar del Café · Manual de Convivencia</title>
+    <link rel="icon" href="/static/mark.svg" type="image/svg+xml" />
+    <style>
+      :root { color-scheme: light; }
+      body { margin: 0; background: #f5f5f4; color: #1c1917; font-family: "Source Sans 3", "Segoe UI", sans-serif; }
+      header { background: #1c1917; color: #fafaf9; }
+      .mx-auto { margin-left: auto; margin-right: auto; }
+      .flex { display: flex; }
+      .max-w-3xl { max-width: 48rem; }
+      .items-center { align-items: center; }
+      .gap-3 { gap: 0.75rem; }
+      .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .py-5 { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+      .py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+      .h-9 { height: 2.25rem; }
+      .w-9 { width: 2.25rem; }
+      .text-xs { font-size: 0.75rem; }
+      .text-sm { font-size: 0.875rem; }
+      .text-lg { font-size: 1.125rem; }
+      .text-base { font-size: 1rem; }
+      .text-4xl { font-size: 2.25rem; line-height: 1.15; }
+      .text-2xl { font-size: 1.5rem; }
+      .font-medium { font-weight: 560; }
+      .font-serif { font-family: Literata, Georgia, serif; }
+      .uppercase { text-transform: uppercase; }
+      .tracking-\[0\.16em\] { letter-spacing: 0.16em; }
+      .tracking-\[0\.14em\] { letter-spacing: 0.14em; }
+      .leading-tight { line-height: 1.25; }
+      .leading-relaxed { line-height: 1.65; }
+      .text-stone-50 { color: #fafaf9; }
+      .text-stone-400 { color: #a8a29e; }
+      .text-stone-500 { color: #78716c; }
+      .text-stone-700 { color: #44403c; }
+      .text-stone-900 { color: #1c1917; }
+      .text-stone-950 { color: #0c0a09; }
+      .text-white { color: #fff; }
+      .mt-2 { margin-top: 0.5rem; }
+      .mt-4 { margin-top: 1rem; }
+      .mt-5 { margin-top: 1.25rem; }
+      .mt-6 { margin-top: 1.5rem; }
+      .mt-8 { margin-top: 2rem; }
+      .mb-1 { margin-bottom: 0.25rem; }
+      .max-w-2xl { max-width: 42rem; }
+      .rounded-lg { border-radius: 0.5rem; }
+      .rounded-xl { border-radius: 0.75rem; }
+      .border { border-width: 1px; border-style: solid; }
+      .border-emerald-200 { border-color: #a7f3d0; }
+      .bg-emerald-50 { background: #ecfdf5; }
+      .text-emerald-950 { color: #022c22; }
+      .border-red-200 { border-color: #fecaca; }
+      .bg-red-50 { background: #fef2f2; }
+      .text-red-950 { color: #450a0a; }
+      .border-stone-200 { border-color: #e7e5e4; }
+      .border-stone-300 { border-color: #d6d3d1; }
+      .bg-white { background: #fff; }
+      .bg-stone-100 { background: #f5f5f4; }
+      .bg-stone-900 { background: #1c1917; }
+      .px-4 { padding-left: 1rem; padding-right: 1rem; }
+      .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+      .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+      .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+      .py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+      .list-disc { list-style: disc; }
+      .space-y-1 > * + * { margin-top: 0.25rem; }
+      .space-y-4 > * + * { margin-top: 1rem; }
+      .pl-5 { padding-left: 1.25rem; }
+      .pb-10 { padding-bottom: 2.5rem; }
+      .block { display: block; }
+      .grid { display: grid; }
+      .gap-4 { gap: 1rem; }
+      .w-full { width: 100%; }
+      .inline-flex { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+      .flex-col { flex-direction: column; }
+      .text-center { text-align: center; }
+      .relative { position: relative; }
+      input, textarea, button { font: inherit; }
+      input, textarea { box-sizing: border-box; background: #fff; }
+      button { cursor: pointer; border: 0; }
+      a.bg-stone-900:hover, button.bg-stone-900:hover { background: #44403c; }
+      @media (min-width: 640px) {
+        .sm\:flex-row { flex-direction: row; }
+        .sm\:grid-cols-2 { grid-template-columns: 1fr 1fr; }
+        .sm\:w-auto { width: auto; }
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,560;7..72,650&family=Source+Sans+3:wght@400;560;650&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Source Sans 3", "ui-sans-serif", "system-ui", "sans-serif"],
+              serif: ["Literata", "Georgia", "serif"],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="min-h-screen bg-stone-100 text-stone-900 font-sans antialiased">
+    <header class="bg-stone-900 text-stone-50">
+      <div class="mx-auto flex max-w-3xl items-center gap-3 px-5 py-5">
+        <img src="/static/mark.svg" alt="" width="36" height="36" class="h-9 w-9" />
+        <div>
+          <p class="text-xs font-medium uppercase tracking-[0.16em] text-stone-400">Propiedad horizontal</p>
+          <p class="font-serif text-lg leading-tight">Bulevar del Café</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-3xl px-5 py-10">
+      <p class="text-sm font-medium uppercase tracking-[0.14em] text-stone-500">Consulta de copropietarios</p>
+      <h1 class="mt-2 font-serif text-4xl leading-tight text-stone-950">Manual de Convivencia</h1>
+      <p class="mt-4 max-w-2xl text-lg leading-relaxed text-stone-700">
+        Aquí está el borrador del manual para que lo leas y, mientras el periodo esté abierto, envíes tus observaciones.
+      </p>
+
+      {% if sent %}
+      <div class="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-950" role="status">
+        Recibimos tu observación. Gracias por participar en la revisión del manual.
+      </div>
+      {% endif %}
+
+      {% if errors %}
+      <div class="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-950" role="alert">
+        <ul class="list-disc space-y-1 pl-5">
+          {% for error in errors %}
+          <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if db_error %}
+      <section class="mt-8 rounded-xl border border-stone-200 bg-white px-5 py-6">
+        <h2 class="font-serif text-2xl">No pudimos cargar la página</h2>
+        <p class="mt-2 text-stone-700">Inténtalo de nuevo en unos minutos.</p>
+      </section>
+      {% else %}
+      <section class="mt-8 rounded-xl border border-stone-200 bg-white px-5 py-6">
+        <h2 class="font-serif text-2xl">Documento en borrador</h2>
+        <p class="mt-2 text-stone-700">Puedes abrirlo en el navegador o guardarlo como PDF. Esta versión sigue en revisión.</p>
+        {% if manual_available %}
+        <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+          <a href="/manual" target="_blank" rel="noopener" class="inline-flex items-center justify-center rounded-lg bg-stone-900 px-4 py-3 text-center font-medium text-white hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-400">Ver manual</a>
+          <a href="/manual/descargar" class="inline-flex items-center justify-center rounded-lg border border-stone-300 bg-white px-4 py-3 text-center font-medium text-stone-900 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-stone-400">Descargar PDF</a>
+        </div>
+        {% else %}
+        <p class="mt-5 rounded-lg bg-stone-100 px-4 py-3 text-stone-700">El manual todavía no se ha publicado.</p>
+        {% endif %}
+      </section>
+
+      <section class="mt-6 rounded-xl border border-stone-200 bg-white px-5 py-6">
+        <h2 class="font-serif text-2xl">Observaciones</h2>
+        {% if form_open %}
+        <p class="mt-2 text-stone-700">
+          Puedes enviar comentarios hasta el <strong>{{ deadline_label }}</strong> (hora de Colombia). Todos los campos son obligatorios.
+        </p>
+        <form method="post" action="/observaciones" class="relative mt-5 space-y-4" accept-charset="utf-8">
+          <div style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+            <label for="company_website">Sitio web</label>
+            <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off" value="" />
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="house_number" class="mb-1 block text-sm font-medium">Número de casa</label>
+              <input id="house_number" name="house_number" type="text" required maxlength="20" autocomplete="off" value="{{ form.house_number }}" class="w-full rounded-lg border border-stone-300 px-3 py-2.5 text-base focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-300" />
+            </div>
+            <div>
+              <label for="owner_name" class="mb-1 block text-sm font-medium">Nombre</label>
+              <input id="owner_name" name="owner_name" type="text" required minlength="2" maxlength="120" autocomplete="name" value="{{ form.owner_name }}" class="w-full rounded-lg border border-stone-300 px-3 py-2.5 text-base focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-300" />
+            </div>
+            <div>
+              <label for="owner_email" class="mb-1 block text-sm font-medium">Correo electrónico</label>
+              <input id="owner_email" name="owner_email" type="email" required maxlength="254" autocomplete="email" value="{{ form.owner_email }}" class="w-full rounded-lg border border-stone-300 px-3 py-2.5 text-base focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-300" />
+            </div>
+            <div>
+              <label for="article_or_page" class="mb-1 block text-sm font-medium">Artículo o página</label>
+              <input id="article_or_page" name="article_or_page" type="text" required maxlength="120" placeholder="Artículo 15 o página 8" value="{{ form.article_or_page }}" class="w-full rounded-lg border border-stone-300 px-3 py-2.5 text-base focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-300" />
+            </div>
+          </div>
+          <div>
+            <label for="body" class="mb-1 block text-sm font-medium">Observación</label>
+            <textarea id="body" name="body" required minlength="10" maxlength="4000" rows="6" class="w-full rounded-lg border border-stone-300 px-3 py-2.5 text-base focus:border-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-300">{{ form.body }}</textarea>
+          </div>
+          <button type="submit" class="inline-flex w-full items-center justify-center rounded-lg bg-stone-900 px-4 py-3 font-medium text-white hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-400 sm:w-auto">Enviar observación</button>
+        </form>
+        {% elif deadline_label %}
+        <p class="mt-2 text-stone-700">El periodo de observaciones cerró el <strong>{{ deadline_label }}</strong> (hora de Colombia). El manual sigue disponible para consulta.</p>
+        {% else %}
+        <p class="mt-2 text-stone-700">El formulario de observaciones todavía no está habilitado. Cuando la administración defina el periodo, podrás escribir desde esta página.</p>
+        {% endif %}
+      </section>
+      {% endif %}
+    </main>
+
+    <footer class="mx-auto max-w-3xl px-5 pb-10 text-sm text-stone-500">
+      Uso de los copropietarios de Bulevar del Café.
+    </footer>
+  </body>
+</html>
