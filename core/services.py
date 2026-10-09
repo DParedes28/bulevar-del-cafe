@@ -1,3 +1,5 @@
+import threading
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -80,6 +82,48 @@ def get_manual(session: Session) -> ManualDocument | None:
     return session.get(ManualDocument, 1)
 
 
+_manual_lock = threading.Lock()
+_manual_cache: tuple[str, datetime, bytes] | None = None
+_manual_checked_at = 0.0
+MANUAL_CACHE_SECONDS = 30
+
+
+def clear_manual_cache() -> None:
+    global _manual_cache, _manual_checked_at
+    with _manual_lock:
+        _manual_cache = None
+        _manual_checked_at = 0.0
+
+
+def get_cached_manual(session: Session) -> tuple[str, datetime, bytes] | None:
+    global _manual_cache, _manual_checked_at
+    now = time.monotonic()
+    with _manual_lock:
+        if _manual_cache is not None and now - _manual_checked_at < MANUAL_CACHE_SECONDS:
+            return _manual_cache
+        meta = get_manual_metadata(session)
+        if meta is None:
+            _manual_cache = None
+            _manual_checked_at = time.monotonic()
+            return None
+        filename, _size_bytes, uploaded_at = meta
+        if (
+            _manual_cache is not None
+            and _manual_cache[0] == filename
+            and _manual_cache[1] == uploaded_at
+        ):
+            _manual_checked_at = time.monotonic()
+            return _manual_cache
+        document = get_manual(session)
+        if document is None or not document.data:
+            _manual_cache = None
+            _manual_checked_at = time.monotonic()
+            return None
+        _manual_cache = (document.filename, document.uploaded_at, bytes(document.data))
+        _manual_checked_at = time.monotonic()
+        return _manual_cache
+
+
 def save_manual(session: Session, filename: str, data: bytes) -> None:
     stored_name = validate_pdf(filename, data)
     now = utcnow()
@@ -112,6 +156,7 @@ def save_manual(session: Session, filename: str, data: bytes) -> None:
     except IntegrityError:
         session.rollback()
         raise ValidationError(["No se pudo guardar el PDF. Revisa que sea un archivo válido de hasta 15 MB."]) from None
+    clear_manual_cache()
 
 
 def create_observation(session: Session, payload: dict[str, str]) -> Observation:

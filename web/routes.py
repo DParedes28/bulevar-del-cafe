@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, Form, Query, Request
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import RedirectResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from sqlalchemy.exc import SQLAlchemyError
@@ -11,7 +11,7 @@ from core.database import get_session
 from core.errors import FormClosedError, ValidationError
 from core.services import (
     create_observation,
-    get_manual,
+    get_cached_manual,
     get_settings_row,
     is_form_open,
     manual_is_available,
@@ -81,33 +81,43 @@ def after_send(return_to: str, page: str) -> str:
     return f"/leer?enviada=1&pagina={page_number}"
 
 
-def pdf_response(session: Session, disposition: str) -> Response:
+def pdf_chunks(data: bytes, size: int = 64 * 1024):
+    view = memoryview(data)
+    for start in range(0, len(view), size):
+        yield view[start : start + size].tobytes()
+
+
+def pdf_response(request: Request, session: Session) -> Response:
     try:
-        document = get_manual(session)
+        cached = get_cached_manual(session)
     except SQLAlchemyError:
         logger.exception("No se pudo leer el manual")
         session.rollback()
+        session.close()
         return Response(
             "El manual no está disponible en este momento.",
             status_code=503,
             media_type="text/plain; charset=utf-8",
         )
-    if document is None:
+    session.close()
+    if cached is None:
         return Response(
             "El manual aún no está disponible.",
             status_code=404,
             media_type="text/plain; charset=utf-8",
         )
-    filename = document.filename or "manual-convivencia.pdf"
-    return Response(
-        content=document.data,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'{disposition}; filename="{filename}"',
-            "Cache-Control": "no-store",
-            "X-Content-Type-Options": "nosniff",
-        },
-    )
+    filename, uploaded_at, data = cached
+    etag = f'"{uploaded_at.isoformat()}"'
+    headers = {
+        "ETag": etag,
+        "Cache-Control": "public, max-age=60",
+        "X-Content-Type-Options": "nosniff",
+    }
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers=headers)
+    headers["Content-Length"] = str(len(data))
+    headers["Content-Disposition"] = f'inline; filename="{filename.replace(chr(34), "")}"'
+    return StreamingResponse(pdf_chunks(data), media_type="application/pdf", headers=headers)
 
 
 @router.get("/")
@@ -189,5 +199,5 @@ def submit_observation(
 
 
 @router.get("/manual")
-def view_manual(session: Session = Depends(get_session)) -> Response:
-    return pdf_response(session, "inline")
+def view_manual(request: Request, session: Session = Depends(get_session)) -> Response:
+    return pdf_response(request, session)
