@@ -149,11 +149,10 @@
       {% else %}
       <section class="mt-8 rounded-xl border border-stone-200 bg-white px-5 py-6">
         <h2 class="font-serif text-2xl">Documento en borrador</h2>
-        <p class="mt-2 text-stone-700">Ábrelo como un libro y escribe el comentario junto a la página que estás leyendo. También puedes guardar el PDF.</p>
+        <p class="mt-2 text-stone-700">Ábrelo como un libro y escribe el comentario junto a la página que estás leyendo.</p>
         {% if manual_available %}
-        <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+        <div class="mt-5">
           <a href="/leer" class="inline-flex items-center justify-center rounded-lg bg-stone-900 px-4 py-3 text-center font-medium text-white hover:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-400">Ver manual</a>
-          <a href="/manual/descargar" class="inline-flex items-center justify-center rounded-lg border border-stone-300 bg-white px-4 py-3 text-center font-medium text-stone-900 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-stone-400">Descargar PDF</a>
         </div>
         {% else %}
         <p class="mt-5 rounded-lg bg-stone-100 px-4 py-3 text-stone-700">El manual todavía no se ha publicado.</p>

@@ -172,7 +172,7 @@ with period_tab:
 
 with manual_tab:
     if manual is None:
-        st.info("Todavía no hay un PDF publicado. La página pública no muestra la descarga.")
+        st.info("Todavía no hay un PDF publicado. La página pública no muestra el libro.")
     else:
         filename, size_bytes, uploaded_at = manual
         st.write(f"Archivo actual: **{filename}**")

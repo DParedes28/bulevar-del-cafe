@@ -191,8 +191,3 @@ def submit_observation(
 @router.get("/manual")
 def view_manual(session: Session = Depends(get_session)) -> Response:
     return pdf_response(session, "inline")
-
-
-@router.get("/manual/descargar")
-def download_manual(session: Session = Depends(get_session)) -> Response:
-    return pdf_response(session, "attachment")
