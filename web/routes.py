@@ -16,7 +16,7 @@ from core.services import (
     is_form_open,
     manual_is_available,
 )
-from core.time import format_bogota
+from core.time import format_bogota, format_plazo
 
 logger = logging.getLogger("bulevar")
 BASE_DIR = Path(__file__).resolve().parent
@@ -24,6 +24,8 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 router = APIRouter()
 
 EMPTY_FORM = {
+    "etapa": "",
+    "manzana": "",
     "house_number": "",
     "owner_name": "",
     "owner_document": "",
@@ -40,6 +42,7 @@ def page_context(session: Session, **extra: object) -> dict[str, object]:
             "form_open": is_form_open(settings_row),
             "manual_available": manual_is_available(session),
             "deadline_label": format_bogota(settings_row.deadline_at) if settings_row else None,
+            "plazo_label": format_plazo(settings_row.deadline_at) if settings_row else None,
             "sent": False,
             "errors": [],
             "form": dict(EMPTY_FORM),
@@ -52,6 +55,7 @@ def page_context(session: Session, **extra: object) -> dict[str, object]:
             "form_open": False,
             "manual_available": False,
             "deadline_label": None,
+            "plazo_label": None,
             "sent": False,
             "errors": [],
             "form": dict(EMPTY_FORM),
@@ -143,6 +147,8 @@ def read_manual(
 @router.post("/observaciones")
 def submit_observation(
     request: Request,
+    etapa: str = Form(""),
+    manzana: str = Form(""),
     house_number: str = Form(""),
     owner_name: str = Form(""),
     owner_document: str = Form(""),
@@ -154,6 +160,8 @@ def submit_observation(
     session: Session = Depends(get_session),
 ):
     form = {
+        "etapa": etapa,
+        "manzana": manzana,
         "house_number": house_number,
         "owner_name": owner_name,
         "owner_document": owner_document,

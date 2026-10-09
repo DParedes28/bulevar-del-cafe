@@ -3,7 +3,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from sqlalchemy import func, update
+from sqlalchemy import func, or_, update
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
@@ -165,6 +165,8 @@ def create_observation(session: Session, payload: dict[str, str]) -> Observation
     clean = validate_observation_fields(**payload)
     now = utcnow()
     observation = Observation(
+        etapa=str(clean["etapa"]),
+        manzana=str(clean["manzana"]),
         house_number=clean["house_number"],
         owner_name=clean["owner_name"],
         owner_document=str(clean["owner_document"]),
@@ -190,6 +192,8 @@ def create_observation(session: Session, payload: dict[str, str]) -> Observation
 @dataclass(frozen=True)
 class ObservationRecord:
     id: int
+    etapa: str | None
+    manzana: str | None
     house_number: str
     owner_name: str
     owner_document: str
@@ -207,6 +211,8 @@ def snapshot_observation(row: Observation) -> ObservationRecord:
         raise NotFoundError("La observación todavía no tiene identificador.")
     return ObservationRecord(
         id=row.id,
+        etapa=row.etapa,
+        manzana=row.manzana,
         house_number=row.house_number,
         owner_name=row.owner_name,
         owner_document=row.owner_document,
@@ -236,7 +242,14 @@ def list_observations(
         statement = statement.where(Observation.deleted_at.is_(None))
     if house and house.strip():
         term = house.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        statement = statement.where(Observation.house_number.ilike(f"%{term}%", escape="\\"))
+        like = f"%{term}%"
+        statement = statement.where(
+            or_(
+                Observation.house_number.ilike(like, escape="\\"),
+                Observation.manzana.ilike(like, escape="\\"),
+                Observation.etapa.ilike(like, escape="\\"),
+            )
+        )
     if status:
         statement = statement.where(Observation.status == status)
     statement = statement.order_by(Observation.created_at.desc())

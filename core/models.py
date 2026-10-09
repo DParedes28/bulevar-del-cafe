@@ -48,6 +48,14 @@ class Observation(SQLModel, table=True):
             name="observations_status_chk",
         ),
         CheckConstraint(
+            "etapa IS NULL OR etapa IN ('1', '2')",
+            name="observations_etapa_chk",
+        ),
+        CheckConstraint(
+            "manzana IS NULL OR char_length(btrim(manzana)) BETWEEN 1 AND 20",
+            name="observations_manzana_chk",
+        ),
+        CheckConstraint(
             "char_length(btrim(house_number)) BETWEEN 1 AND 20",
             name="observations_house_chk",
         ),
@@ -84,6 +92,8 @@ class Observation(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
+    etapa: str | None = Field(default=None, sa_column=Column(String(1), nullable=True))
+    manzana: str | None = Field(default=None, sa_column=Column(String(20), nullable=True))
     house_number: str = Field(sa_column=Column(String(20), nullable=False))
     owner_name: str = Field(sa_column=Column(String(120), nullable=False))
     owner_document: str = Field(sa_column=Column(String(20), nullable=False))

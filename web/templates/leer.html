@@ -18,8 +18,8 @@
       .brand small { display: block; letter-spacing: 0.16em; text-transform: uppercase; color: #a8a29e; font-size: 11px; }
       .brand strong { font-family: Georgia, serif; font-weight: 560; }
       .back { color: #fafaf9; text-decoration: none; font-size: 14px; }
-      .layout { max-width: 1500px; margin: 0 auto; padding: 16px 16px 28px; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; align-items: start; }
-      .stage { background: #2c2622; border-radius: 16px; padding: 16px; min-height: calc(100vh - 108px); }
+      .layout { max-width: 1500px; margin: 0 auto; padding: 16px 16px 28px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: stretch; }
+      .stage { background: #2c2622; border-radius: 16px; padding: 16px; min-height: calc(100vh - 108px); height: 100%; }
       .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #fafaf9; margin-bottom: 14px; }
       .tools { display: flex; align-items: center; gap: 12px; }
       .toolbar button, .note button, .back-btn { border: 0; border-radius: 8px; padding: 10px 14px; font: inherit; cursor: pointer; }
@@ -33,8 +33,10 @@
       .lens.show { display: block; }
       .lens canvas { display: block; width: 100%; height: 100%; }
       .sheet canvas { display: block; width: 100%; height: auto; }
-      .note { background: #fff; border: 1px solid #e7e5e4; border-radius: 16px; padding: 20px; position: sticky; top: 16px; }
-      .note h1 { font-family: Georgia, serif; font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+      .note { background: #fff; border: 1px solid #e7e5e4; border-radius: 16px; padding: 20px; min-height: calc(100vh - 108px); height: 100%; }
+      .plazo { background: #f3d48a; border-radius: 10px; padding: 12px 14px; margin: 0 0 16px; font-weight: 600; line-height: 1.4; }
+      .note h1 { font-family: Georgia, serif; font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: 0.04em; }
+      .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
       .note p, .status { color: #44403c; line-height: 1.5; }
       label { display: block; font-size: 14px; font-weight: 560; margin: 14px 0 6px; }
       input, textarea, select { width: 100%; border: 1px solid #d6d3d1; border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 16px; }
@@ -49,7 +51,7 @@
         .layout { grid-template-columns: 1fr; }
         .spread { grid-template-columns: 1fr; }
         .sheet.right { display: none; }
-        .note { position: static; }
+        .note { min-height: 0; height: auto; }
       }
     </style>
   </head>
@@ -89,7 +91,10 @@
         {% endif %}
       </section>
       <aside class="note">
-        <h1>Comentario</h1>
+        {% if form_open and plazo_label %}
+        <p class="plazo">Plazo para recibir observaciones hasta el {{ plazo_label }}.</p>
+        {% endif %}
+        <h1>COMENTARIOS</h1>
         {% if sent %}
         <div class="alert ok" role="status">Recibimos tu observación. Puedes seguir leyendo y enviar otra.</div>
         {% endif %}
@@ -101,8 +106,6 @@
         </div>
         {% endif %}
         {% if form_open and manual_available %}
-        <p id="page-help">La página y el artículo se envían por separado. Elige la página que estás viendo.</p>
-        {% if deadline_label %}<p>El periodo sigue abierto hasta el <strong>{{ deadline_label }}</strong>.</p>{% endif %}
         <form method="post" action="/observaciones" id="comment-form" accept-charset="utf-8">
           <div style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
             <label for="company_website">Sitio web</label>
@@ -114,8 +117,22 @@
           <select id="comment-page"></select>
           <label for="article">Artículo, si aplica</label>
           <input id="article" name="article" type="text" maxlength="80" placeholder="Opcional" value="{{ form.article }}" />
-          <label for="house_number">Número de casa</label>
-          <input id="house_number" name="house_number" required maxlength="20" value="{{ form.house_number }}" />
+          <label for="etapa">Etapa</label>
+          <select id="etapa" name="etapa" required>
+            <option value="" {% if not form.etapa %}selected{% endif %} disabled>Elige</option>
+            <option value="1" {% if form.etapa == "1" %}selected{% endif %}>1</option>
+            <option value="2" {% if form.etapa == "2" %}selected{% endif %}>2</option>
+          </select>
+          <div class="pair">
+            <div>
+              <label for="manzana">Manzana</label>
+              <input id="manzana" name="manzana" required maxlength="20" value="{{ form.manzana }}" />
+            </div>
+            <div>
+              <label for="house_number">Casa</label>
+              <input id="house_number" name="house_number" required maxlength="20" value="{{ form.house_number }}" />
+            </div>
+          </div>
           <label for="owner_name">Nombre</label>
           <input id="owner_name" name="owner_name" required minlength="2" maxlength="120" value="{{ form.owner_name }}" />
           <label for="owner_document">Cédula</label>

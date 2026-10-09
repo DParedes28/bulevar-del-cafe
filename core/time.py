@@ -21,3 +21,25 @@ def combine_bogota(day: date, clock: time) -> datetime:
 
 def format_bogota(value: datetime) -> str:
     return to_bogota(value).strftime("%d/%m/%Y %H:%M")
+
+
+_MESES = (
+    "",
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
+)
+
+
+def format_plazo(value: datetime) -> str:
+    local = to_bogota(value)
+    return f"{local.day} de {_MESES[local.month]} a las {local.strftime('%H:%M')}"

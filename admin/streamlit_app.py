@@ -71,6 +71,8 @@ def observations_frame(rows: list) -> pd.DataFrame:
     for row in rows:
         record = {
             "Id": row.id,
+            "Etapa": row.etapa or "",
+            "Manzana": row.manzana or "",
             "Casa": row.house_number,
             "Nombre": row.owner_name,
             "Cédula": row.owner_document,
@@ -196,7 +198,7 @@ with manual_tab:
 
 with observations_tab:
     filter_house, filter_status, filter_deleted = st.columns([2, 1, 1])
-    house = filter_house.text_input("Número de casa", placeholder="Contiene…")
+    house = filter_house.text_input("Etapa, manzana o casa", placeholder="Contiene…")
     status_options = ["Todas", *STATUS_LABELS.keys()]
     status_choice = filter_status.selectbox(
         "Estado",
@@ -238,7 +240,10 @@ with observations_tab:
         )
 
         labels = {
-            row.id: f"#{row.id} · casa {row.house_number} · {STATUS_LABELS.get(row.status, row.status)}"
+            row.id: (
+                f"#{row.id} · etapa {row.etapa or '—'} · manzana {row.manzana or '—'} · "
+                f"casa {row.house_number} · {STATUS_LABELS.get(row.status, row.status)}"
+            )
             for row in rows
         }
         selected_id = st.selectbox("Observación", options=list(labels), format_func=lambda item: labels[item])

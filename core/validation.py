@@ -14,6 +14,8 @@ def _clean(value: str) -> str:
 
 
 def validate_observation_fields(
+    etapa: str,
+    manzana: str,
     house_number: str,
     owner_name: str,
     owner_document: str,
@@ -21,6 +23,8 @@ def validate_observation_fields(
     article: str,
     body: str,
 ) -> dict[str, str | int]:
+    stage = _clean(etapa)
+    block = _clean(manzana)
     house = _clean(house_number)
     name = _clean(owner_name)
     document = re.sub(r"[\s.\-]", "", _clean(owner_document))
@@ -29,8 +33,12 @@ def validate_observation_fields(
     errors: list[str] = []
     parsed_page = int(page_number) if str(page_number).isdigit() else 0
 
+    if stage not in {"1", "2"}:
+        errors.append("Elige la etapa 1 o 2.")
+    if not 1 <= len(block) <= 20:
+        errors.append("La manzana debe tener entre 1 y 20 caracteres.")
     if not 1 <= len(house) <= 20:
-        errors.append("El número de casa debe tener entre 1 y 20 caracteres.")
+        errors.append("La casa debe tener entre 1 y 20 caracteres.")
     if not 2 <= len(name) <= 120:
         errors.append("El nombre debe tener entre 2 y 120 caracteres.")
     if DOCUMENT_RE.fullmatch(document) is None:
@@ -46,6 +54,8 @@ def validate_observation_fields(
         raise ValidationError(errors)
 
     return {
+        "etapa": stage,
+        "manzana": block,
         "house_number": house,
         "owner_name": name,
         "owner_document": document,

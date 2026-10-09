@@ -41,6 +41,7 @@ def init_db() -> None:
     engine = get_engine()
     SQLModel.metadata.create_all(engine)
     _migrate_observations(engine)
+    _migrate_location(engine)
 
 
 def _migrate_observations(engine) -> None:
@@ -101,6 +102,49 @@ def _migrate_observations(engine) -> None:
                 "CHECK (char_length(article) <= 80)"
             )
         )
+
+
+def _migrate_location(engine) -> None:
+    if engine.dialect.name != "postgresql":
+        return
+    with engine.begin() as connection:
+        connection.execute(text("SELECT pg_advisory_xact_lock(740231)"))
+        columns = {
+            row[0]
+            for row in connection.execute(
+                text(
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_schema = 'public' AND table_name = 'observations'"
+                )
+            )
+        }
+        if "etapa" not in columns:
+            connection.execute(text("ALTER TABLE observations ADD COLUMN IF NOT EXISTS etapa VARCHAR(1)"))
+        if "manzana" not in columns:
+            connection.execute(text("ALTER TABLE observations ADD COLUMN IF NOT EXISTS manzana VARCHAR(20)"))
+        present = {
+            row[0]
+            for row in connection.execute(
+                text(
+                    "SELECT conname FROM pg_constraint "
+                    "WHERE conname IN ('observations_etapa_chk', 'observations_manzana_chk')"
+                )
+            )
+        }
+        if "observations_etapa_chk" not in present:
+            connection.execute(
+                text(
+                    "ALTER TABLE observations ADD CONSTRAINT observations_etapa_chk "
+                    "CHECK (etapa IS NULL OR etapa IN ('1', '2'))"
+                )
+            )
+        if "observations_manzana_chk" not in present:
+            connection.execute(
+                text(
+                    "ALTER TABLE observations ADD CONSTRAINT observations_manzana_chk "
+                    "CHECK (manzana IS NULL OR char_length(btrim(manzana)) BETWEEN 1 AND 20)"
+                )
+            )
 
 
 @contextmanager
