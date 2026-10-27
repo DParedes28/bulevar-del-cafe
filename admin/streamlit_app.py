@@ -95,6 +95,12 @@ def excel_bytes(frame: pd.DataFrame) -> bytes:
     return buffer.getvalue()
 
 
+@st.cache_resource(show_spinner=False)
+def prepare_database() -> bool:
+    init_db()
+    return True
+
+
 try:
     settings = get_settings()
 except SettingsError:
@@ -109,7 +115,7 @@ require_password(settings.admin_password)
 
 if not st.session_state.get("db_ready"):
     try:
-        init_db()
+        prepare_database()
     except Exception as exc:
         st.error("No se pudo conectar a la base de datos.")
         st.caption(str(exc).split("\n")[0])

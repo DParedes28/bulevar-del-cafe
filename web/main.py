@@ -24,6 +24,11 @@ async def lifespan(_app: FastAPI):
     yield
 
 
+# Los monitores (UptimeRobot) suelen usar HEAD. Estas rutas contestan 200 sin
+# abrir conexión a la base, para que un ping no despierte Neon.
+HEAD_WITHOUT_DB_PATHS = frozenset({"/", "/leer", "/manual", "/health", "/healthz"})
+
+
 class HeadAsGetMiddleware:
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
@@ -31,6 +36,19 @@ class HeadAsGetMiddleware:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http" or scope["method"] != "HEAD":
             await self.app(scope, receive, send)
+            return
+        if scope["path"] in HEAD_WITHOUT_DB_PATHS:
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": 200,
+                    "headers": [
+                        (b"content-length", b"0"),
+                        (b"cache-control", b"no-store"),
+                    ],
+                }
+            )
+            await send({"type": "http.response.body", "body": b"", "more_body": False})
             return
         request = dict(scope)
         request["method"] = "GET"
@@ -63,6 +81,7 @@ def create_app() -> FastAPI:
     application.include_router(router)
 
     @application.get("/health")
+    @application.get("/healthz")
     def health() -> dict[str, str]:
         return {"status": "ok"}
 

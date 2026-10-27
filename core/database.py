@@ -2,6 +2,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 from sqlalchemy import text
+from sqlalchemy.pool import NullPool
 from sqlmodel import Session, SQLModel, create_engine
 
 from core.config import get_settings
@@ -24,14 +25,12 @@ def get_engine():
     global _engine
     if _engine is None:
         url = normalize_database_url(get_settings().database_url)
-        connect_args = {"prepare_threshold": None} if url.startswith("postgresql") else {}
-        _engine = create_engine(
-            url,
-            pool_pre_ping=True,
-            pool_size=5,
-            max_overflow=5,
-            connect_args=connect_args,
-        )
+        is_postgres = url.startswith("postgresql")
+        connect_args = {"prepare_threshold": None, "connect_timeout": 15} if is_postgres else {}
+        # Sin conexiones guardadas: Neon puede apagarse entre visitas y no hay
+        # conexiones viejas que revisar con "SELECT 1" en cada petición.
+        pool_options = {"poolclass": NullPool} if is_postgres else {}
+        _engine = create_engine(url, connect_args=connect_args, **pool_options)
     return _engine
 
 

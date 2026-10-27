@@ -47,3 +47,10 @@ En el panel, el primer paso es guardar la fecha de cierre y publicar el PDF.
 - `bulevar-del-cafe-admin` ejecuta Streamlit y necesita `DATABASE_URL` y `ADMIN_PASSWORD`.
 
 Usa la cadena directa de Neon en ambos. El panel queda protegido por la contraseña; la dirección sigue siendo pública.
+
+## Monitoreo y consumo de Neon
+
+- Apunta UptimeRobot a `/healthz` (también sirve `/health`). Responde a GET y HEAD sin tocar la base.
+- Los HEAD a `/`, `/leer` y `/manual` también responden 200 sin consultar la base.
+- Usa un intervalo de 15 a 30 minutos. Con menos de 5 minutos Neon nunca llega a apagarse.
+- La conexión a la base no se mantiene abierta entre peticiones, así Neon puede escalar a cero.
