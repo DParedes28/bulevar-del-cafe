@@ -58,6 +58,7 @@ def save_deadline(session: Session, deadline_at: datetime) -> AppSettings:
         row.updated_at = now
         session.commit()
     session.refresh(row)
+    clear_public_state_cache()
     return row
 
 
@@ -124,6 +125,32 @@ def get_cached_manual(session: Session) -> tuple[str, datetime, bytes] | None:
         return _manual_cache
 
 
+_public_lock = threading.Lock()
+_public_state: tuple[datetime | None, bool] | None = None
+_public_checked_at = 0.0
+PUBLIC_STATE_SECONDS = 30
+
+
+def clear_public_state_cache() -> None:
+    global _public_state, _public_checked_at
+    with _public_lock:
+        _public_state = None
+        _public_checked_at = 0.0
+
+
+def get_public_state(session: Session) -> tuple[datetime | None, bool]:
+    """Fecha límite y si hay manual, guardadas en memoria unos segundos."""
+    global _public_state, _public_checked_at
+    with _public_lock:
+        if _public_state is not None and time.monotonic() - _public_checked_at < PUBLIC_STATE_SECONDS:
+            return _public_state
+        row = get_settings_row(session)
+        state = (None if row is None else row.deadline_at, manual_is_available(session))
+        _public_state = state
+        _public_checked_at = time.monotonic()
+        return state
+
+
 def save_manual(session: Session, filename: str, data: bytes) -> None:
     stored_name = validate_pdf(filename, data)
     now = utcnow()
@@ -157,6 +184,7 @@ def save_manual(session: Session, filename: str, data: bytes) -> None:
         session.rollback()
         raise ValidationError(["No se pudo guardar el PDF. Revisa que sea un archivo válido de hasta 15 MB."]) from None
     clear_manual_cache()
+    clear_public_state_cache()
 
 
 def create_observation(session: Session, payload: dict[str, str]) -> Observation:

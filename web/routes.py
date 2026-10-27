@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import RedirectResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
+from types import SimpleNamespace
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session
 
@@ -12,9 +13,8 @@ from core.errors import FormClosedError, ValidationError
 from core.services import (
     create_observation,
     get_cached_manual,
-    get_settings_row,
+    get_public_state,
     is_form_open,
-    manual_is_available,
 )
 from core.time import format_bogota, format_plazo
 
@@ -37,12 +37,12 @@ EMPTY_FORM = {
 
 def page_context(session: Session, **extra: object) -> dict[str, object]:
     try:
-        settings_row = get_settings_row(session)
+        deadline_at, manual_available = get_public_state(session)
         context: dict[str, object] = {
-            "form_open": is_form_open(settings_row),
-            "manual_available": manual_is_available(session),
-            "deadline_label": format_bogota(settings_row.deadline_at) if settings_row else None,
-            "plazo_label": format_plazo(settings_row.deadline_at) if settings_row else None,
+            "form_open": is_form_open(SimpleNamespace(deadline_at=deadline_at) if deadline_at else None),
+            "manual_available": manual_available,
+            "deadline_label": format_bogota(deadline_at) if deadline_at else None,
+            "plazo_label": format_plazo(deadline_at) if deadline_at else None,
             "sent": False,
             "errors": [],
             "form": dict(EMPTY_FORM),
@@ -130,7 +130,9 @@ def home(
     enviada: int = Query(default=0),
     session: Session = Depends(get_session),
 ):
-    return render(request, page_context(session, sent=enviada == 1))
+    context = page_context(session, sent=enviada == 1)
+    session.close()
+    return render(request, context)
 
 
 @router.get("/leer")
@@ -141,6 +143,7 @@ def read_manual(
     session: Session = Depends(get_session),
 ):
     context = page_context(session, sent=enviada == 1, start_page=max(pagina, 1))
+    session.close()
     return render(request, context, reader=True)
 
 
